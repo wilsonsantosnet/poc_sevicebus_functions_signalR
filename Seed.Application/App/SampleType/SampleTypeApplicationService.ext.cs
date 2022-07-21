@@ -18,12 +18,25 @@ namespace Seed.Application
         public SampleTypeApplicationService(ISampleTypeService service, IUnitOfWork uow, ICache cache, CurrentUser user, IMapper mapper) :
             base(service, uow, cache, user, mapper)
         {
-  
+
         }
 
         protected override System.Collections.Generic.IEnumerable<TDS> MapperDomainToResult<TDS>(FilterBase filter, PaginateResult<SampleType> dataList)
         {
             return base.MapperDomainToResult<SampleTypeDtoSpecializedResult>(filter, dataList) as IEnumerable<TDS>;
+
+        }
+
+        protected override TDS MapperDomainToDto<TDS>(FilterBase filter, SampleType model)
+        {
+            //return base.MapperDomainToDto<TDS>(filter, model);
+            return new SampleTypeDtoSpecialized
+            {
+
+                Name = model.Name,
+                SampleTypeId = model.SampleTypeId,
+            } as TDS;
+
         }
 
 

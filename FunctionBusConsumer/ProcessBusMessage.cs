@@ -1,15 +1,25 @@
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.SignalRService;
 using Microsoft.Extensions.Logging;
+using Seed.Application.Interfaces;
+using Seed.Dto;
 using System;
 using System.Threading.Tasks;
 
 namespace FunctionBusConsumer
 {
-    public static class ProcessBusMessage
+    public class ProcessBusMessage
     {
+
+        private readonly ISampleTypeApplicationService _app;
+        public ProcessBusMessage(ISampleTypeApplicationService app)
+        {
+            this._app = app;
+        }
+
+
         [FunctionName("ProcessBusMessage")]
-        public static Task Run(
+        public Task Run(
         [ServiceBusTrigger("SampleType", Connection = "BusCns")]
         string myQueueItem,
         int deliveryCount,
@@ -24,7 +34,11 @@ namespace FunctionBusConsumer
             log.LogInformation($"DeliveryCount={deliveryCount}");
             log.LogInformation($"MessageId={messageId}");
 
-            System.Threading.Thread.Sleep(5000);
+            var dto = System.Text.Json.JsonSerializer.Deserialize<SampleTypeDtoSpecialized>(myQueueItem, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            var returnModel = this._app.Save(dto).Result;
 
 
             return signalRMessages.AddAsync(
@@ -32,7 +46,7 @@ namespace FunctionBusConsumer
                 {
                     Target = "ClientNotificationMethod",
                     Arguments = new[] { "SampleType", "SampleType processado com Sucesso." }
-                });
+});
 
         }
     }
